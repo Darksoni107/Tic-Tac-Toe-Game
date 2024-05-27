@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.scale-up-center {
+  -webkit-animation: scale-up-center 0.4s cubic-bezier(0.39, 0.575, 0.565, 1)
+    both;
+  animation: scale-up-center 0.4s cubic-bezier(0.39, 0.575, 0.565, 1) both;
+}
+
+@keyframes scaleAnimation {
+  0% {
+    transform: scale(0); /* Start at scale 0 */
+  }
+  100% {
+    transform: scale(1); /* End at full scale (1) */
+  }
+}
+
+.animate-scale {
+  animation: scaleAnimation 0.6s ease forwards;
+}
