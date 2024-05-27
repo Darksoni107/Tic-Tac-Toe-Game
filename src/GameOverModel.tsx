@@ -2,16 +2,13 @@ export default function GameOverModel({
   playerWin = "",
   onReplyClick = () => {},
   onResetClick = () => {},
-  isPlayer2Computer = false,
 }) {
   return (
     <div className="animate-scale absolute bottom-0 top-0 z-50 -mt-10 flex  w-full flex-col items-center justify-center gap-9 bg-neutral-900/80 py-6 text-white">
       <h1 className=" text-3xl">
-        {playerWin === "tie"
-          ? "Draw"
-          : isPlayer2Computer
-            ? "Computer wins"
-            : `Player ${playerWin.toUpperCase()} wins`}
+        {playerWin === "tie" && "Draw"}
+
+        {playerWin !== "tie" && `Player ${playerWin.toUpperCase()} wins`}
       </h1>
       <button
         onClick={onReplyClick}

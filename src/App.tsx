@@ -163,7 +163,6 @@ export default function App() {
             playerWin={gameState.playerWin}
             onReplyClick={start}
             onResetClick={reset}
-            isPlayer2Computer={isPlayer2Computer}
           />
         )}
       </main>
