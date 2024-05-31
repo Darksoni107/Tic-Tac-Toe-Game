@@ -13,12 +13,12 @@ const defaultGameBoard: GameBoard = new Array(9).fill("");
 type GameState = {
   playerWin: null | move | "tie";
   winningPattern: null | number[];
-  currPlayer: move;
+  currTurn: move;
   gameBoard: move[];
 };
 
 const intitalGameState: GameState = {
-  currPlayer: "x",
+  currTurn: "x",
   playerWin: null,
   winningPattern: null,
   gameBoard: defaultGameBoard,
@@ -26,7 +26,8 @@ const intitalGameState: GameState = {
 
 export default function App() {
   const [score, setScore] = useState({ x: 0, o: 0, tie: 0 });
-  const [isPlayer2Computer, setIsPlayer2Computer] = useState(true);
+  const [isPlayer2Ai, setIsPlayer2Ai] = useState(true);
+  const [difficulty, setDifficulty] = useState(1);
   const [gameState, setGameState] = useState<GameState>(intitalGameState);
 
   const draw = useCallback(
@@ -35,20 +36,20 @@ export default function App() {
       if (gameState.playerWin || gameState.gameBoard[i]) return;
 
       const newGameBoard = gameState.gameBoard.map((v, j) =>
-        j === i ? gameState.currPlayer : v,
+        j === i ? gameState.currTurn : v,
       );
 
       setGameState((p) => {
         return {
           ...p,
           gameBoard: newGameBoard,
-          currPlayer: p.currPlayer === "x" ? "o" : "x",
+          currTurn: p.currTurn === "x" ? "o" : "x",
         };
       });
 
       overGameIfAnyWin(newGameBoard);
 
-      gameState.currPlayer === "x" ? gameSound.xSound() : gameSound.ySound();
+      gameState.currTurn === "x" ? gameSound.xSound() : gameSound.ySound();
     },
     [gameState],
   );
@@ -61,7 +62,7 @@ export default function App() {
 
   //for restaring game
   const start = () => {
-    setGameState((p) => ({ ...intitalGameState, currPlayer: p.currPlayer }));
+    setGameState((p) => ({ ...intitalGameState, currTurn: p.currTurn }));
   };
 
   const overGameIfAnyWin = (board: GameBoard) => {
@@ -74,52 +75,70 @@ export default function App() {
       winningPattern: patternMatch,
     }));
 
-    setScore((p) => ({ ...p, [playerWin]: p[playerWin] + 1 }));
+    setScore((p) => ({ ...p, [playerWin]: p[playerWin] }));
   };
 
   useEffect(() => {
-    if (
-      isPlayer2Computer &&
-      gameState.currPlayer === "o" &&
-      !gameState.playerWin
-    ) {
-      setTimeout(() => draw(aiPlayer(gameState.gameBoard) as number), 500);
+    if (isPlayer2Ai && gameState.currTurn === "o" && !gameState.playerWin) {
+      setTimeout(
+        () => draw(aiPlayer(gameState.gameBoard, difficulty).index as number),
+        300,
+      );
     }
-  }, [gameState, isPlayer2Computer, draw]);
+  }, [gameState, isPlayer2Ai, draw, difficulty]);
 
   return (
     <div className=" absolute left-0 right-0 top-0 mx-auto min-h-screen bg-black">
       <main className="z-50 flex min-h-screen w-full flex-col items-center">
         {/*Game mode Selector*/}
-        <div className=" mt-4 flex text-white">
-          <button
-            className={`border-r bg-neutral-700 px-6 ${!isPlayer2Computer && "opacity-45"}`}
-            onClick={() => {
-              reset();
-              setIsPlayer2Computer(true);
-            }}
-          >
-            1 Player
-          </button>
-          <button
-            className={`bg-neutral-700 px-6 ${isPlayer2Computer && "opacity-45"}`}
-            onClick={() => {
-              reset();
-              setIsPlayer2Computer(false);
-            }}
-          >
-            2 Player
-          </button>
+
+        <div className=" mt-4 text-white">
+          <div className=" flex">
+            <button
+              className={`border-r bg-neutral-700 px-6 ${!isPlayer2Ai && "opacity-45"}`}
+              onClick={() => {
+                reset();
+                setIsPlayer2Ai(true);
+              }}
+            >
+              1 Player
+            </button>
+            <button
+              className={`bg-neutral-700 px-6 ${isPlayer2Ai && "opacity-45"}`}
+              onClick={() => {
+                reset();
+                setIsPlayer2Ai(false);
+              }}
+            >
+              2 Player
+            </button>
+            {isPlayer2Ai && (
+              <select
+                title="Difficulty level"
+                className="ml-1 cursor-pointer bg-neutral-700 px-2 text-sm"
+                onChange={(e) => {
+                  reset();
+                  setDifficulty(+e.target.value);
+                }}
+                value={difficulty}
+              >
+                <option value={1}>Easy</option>
+                <option value={3}>Medium</option>
+                <option value={6}>Hard</option>
+                <option value={Infinity}>Expert</option>
+              </select>
+            )}
+          </div>
         </div>
 
         {/*Current Player Turn showcase */}
         <p className=" mt-5 flex items-center gap-3 text-center text-lg font-bold tracking-wider text-white">
           Player
           <span
-            style={{ color: gameState.currPlayer === "x" ? "red" : "blue" }}
+            style={{ color: gameState.currTurn === "x" ? "red" : "blue" }}
             className="text-2xl uppercase"
           >
-            {gameState.currPlayer}
+            {gameState.currTurn}
           </span>
           Turns
         </p>
@@ -133,19 +152,19 @@ export default function App() {
               return (
                 <button
                   key={i}
-                  className={`group relative flex cursor-pointer items-center justify-center bg-black text-[70px] font-bold
-                 uppercase text-white
+                  className={`group relative flex cursor-pointer items-center justify-center bg-black text-[70px] font-bold uppercase text-white
+                  active:animate-pulse
                 `}
                   style={{
                     color: move === "x" ? "red" : "blue",
                   }}
                   onClick={() => draw(i)}
-                  disabled={isPlayer2Computer && gameState.currPlayer === "o"}
+                  disabled={isPlayer2Ai && gameState.currTurn === "o"}
                 >
                   {/* If value is not exits then show curr player in with ghost effect on hover */}
                   {!move && (
                     <span className="absolute hidden uppercase text-neutral-200 opacity-10 group-hover:block">
-                      {gameState.currPlayer}
+                      {gameState.currTurn}
                     </span>
                   )}
                   {move}
@@ -156,7 +175,7 @@ export default function App() {
           </div>
         </section>
 
-        <ScoreBoard score={score} isPlayer2Computer={isPlayer2Computer} />
+        <ScoreBoard score={score} isPlayer2Computer={isPlayer2Ai} />
 
         {gameState.playerWin && (
           <GameOverModel

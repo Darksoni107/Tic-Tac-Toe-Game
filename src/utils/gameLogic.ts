@@ -23,10 +23,13 @@ function selectRandom<T>(array: T[] = []) {
   return array[randomIndex];
 }
 
-export const isAllPostionFill = (gameBoard: Array<unknown>) =>
-  gameBoard.every((v) => v);
+//Return true if all place have truthy value in a array
+export const isAllPostionFill = (gameBoard: Array<unknown>) => {
+  return gameBoard.every((v) => v);
+};
 
-const getAllEmptyPlaces = (gameBoard: GameBoard) => {
+//Return all empty places in a array
+const getAllEmptyPlaces = <T>(gameBoard: Array<T>) => {
   const emptyPlaces: number[] = [];
   gameBoard.forEach((v, i) => {
     if (!v) emptyPlaces.push(i);
@@ -35,6 +38,7 @@ const getAllEmptyPlaces = (gameBoard: GameBoard) => {
 };
 
 export function checkWin(gameBoard: GameBoard) {
+  //Finding for any winning pattern match the current game state.
   const patternMatch =
     winningPatterns.find((pattern) => {
       const firstValue = gameBoard[pattern[0]];
@@ -51,58 +55,42 @@ export function checkWin(gameBoard: GameBoard) {
   };
 }
 
-//Simple logic for computer player.
-export function aiPlayer(gameBoard: GameBoard): number | null {
+export function aiPlayer(
+  gameBoard: GameBoard,
+  maxDepth = Infinity,
+  isAiPlaying = true,
+): { score: number; index: number } {
   const emptyPlaces = getAllEmptyPlaces(gameBoard);
+  const { playerWin } = checkWin(gameBoard);
 
-  if (emptyPlaces.length === 0) return null;
+  if (playerWin === "x") return { score: -1, index: -1 };
+  if (playerWin === "tie") return { score: 0, index: -1 };
+  if (playerWin === "o") return { score: 1, index: -1 };
+  if (maxDepth <= 0) return { score: 0, index: -1 };
 
-  //Checking if putting any value make computer wins.
+  //Calculating the score for each empty place
+  const moves = [];
   for (const value of emptyPlaces) {
-    const boardCopy = gameBoard.slice();
-    boardCopy[value] = "o";
-    const { playerWin } = checkWin(boardCopy);
-    if (playerWin === "o") return value;
+    const boardCopy = [...gameBoard];
+    boardCopy[value] = isAiPlaying ? "o" : "x";
+    moves.push({
+      index: value,
+      score: aiPlayer(boardCopy, maxDepth - 1, !isAiPlaying).score,
+    });
   }
 
-  //Checking if putting any value make human wins.
-  for (const value of emptyPlaces) {
-    const boardCopy = gameBoard.slice();
-    boardCopy[value] = "x";
-    const { playerWin } = checkWin(boardCopy);
-    if (playerWin === "x") return value;
+  //Finding best move for current state
+  if (isAiPlaying) {
+    // Maxmizing the score if ai playing
+    const bestMove = moves.reduce((prev, current) =>
+      prev.score > current.score ? prev : current,
+    );
+    return { index: bestMove.index, score: bestMove.score };
+  } else {
+    //Minimizing the score if human playing
+    const bestMove = moves.reduce((prev, current) =>
+      prev.score < current.score ? prev : current,
+    );
+    return { index: bestMove.index, score: bestMove.score };
   }
-
-  // Choose a random move if no immediate winning or blocking move is found
-  return selectRandom(emptyPlaces);
 }
-
-// export function proAiPlayer(
-//   gameBoard: GameBoard,
-//   isMinimizing = false,
-// ): number {
-//   const emptyPlaces = getAllEmptyPlaces(gameBoard);
-//   const { playerWin } = checkWin(gameBoard);
-//   if (playerWin === "x") -1;
-//   if (playerWin === "o") 1;
-//   if (playerWin === "tie") 0;
-
-//   const moves: { [key: string]: number } = {};
-
-//   for (const value of emptyPlaces) {
-//     const boardCopy = gameBoard.slice();
-//     boardCopy[value] = isMinimizing ? "x" : "o";
-//     moves[value + ""] = proAiPlayer(boardCopy, !isMinimizing);
-//   }
-
-//   if (isMinimizing) {
-//     let bestMove: number;
-//     let scoreAcc: number = Infinity;
-//     Object.entries(moves).forEach(([key, value]) => {
-//       if (isMinimizing) {
-//       } else {
-//         bestMove = Math.max(bestMove, value);
-//       }
-//     });
-//   }
-// }
