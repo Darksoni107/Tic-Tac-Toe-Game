@@ -67,6 +67,7 @@ export default function App() {
 
   const overGameIfAnyWin = (board: GameBoard) => {
     const { playerWin, patternMatch } = checkWin(board);
+    console.log({ playerWin });
     if (!playerWin) return;
     playerWin === "tie" ? gameSound.drawSound() : gameSound.winSound();
     setGameState((p) => ({
@@ -75,7 +76,7 @@ export default function App() {
       winningPattern: patternMatch,
     }));
 
-    setScore((p) => ({ ...p, [playerWin]: p[playerWin] }));
+    setScore((p) => ({ ...p, [playerWin]: p[playerWin] + 1 }));
   };
 
   useEffect(() => {
